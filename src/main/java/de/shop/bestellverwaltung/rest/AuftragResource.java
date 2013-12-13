@@ -10,6 +10,7 @@ import static javax.ws.rs.core.MediaType.TEXT_XML;
 import java.net.URI;
 import java.util.List;
 
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -29,7 +30,7 @@ import javax.ws.rs.core.UriInfo;
 import de.shop.bestellverwaltung.domain.Auftrag;
 import de.shop.bestellverwaltung.domain.Lieferant;
 import de.shop.bestellverwaltung.domain.Rechnung;
-import de.shop.util.Mock;
+import de.shop.bestellverwaltung.service.AuftragService;
 import de.shop.util.NotFoundException;
 import de.shop.util.UriHelper;
 
@@ -37,8 +38,8 @@ import de.shop.util.UriHelper;
 @Path("/auftrag")
 @Produces({ APPLICATION_JSON, APPLICATION_XML + ";qs=0.75", TEXT_XML + ";qs=0.5" })
 @Consumes
+@RequestScoped
 public class AuftragResource {
-	public static final String AUFTRAGS_ID_PATH_PARAM = "id";
 	
 	@Context
 	private UriInfo uriInfo;
@@ -48,14 +49,16 @@ public class AuftragResource {
 	private RechnungResource rechnungResource;
 	@Inject
 	private LieferantResource lieferantResource;
+	@Inject
+	private AuftragService as;
 	
 	@GET
 	@Path("{id:[1-9][0-9]*}")
-	public Response findAuftragById(@PathParam(AUFTRAGS_ID_PATH_PARAM) Long id) {
-		// TODO Anwendungskern statt Mock, Verwendung von Locale
-		final Auftrag auftrag = Mock.findAuftragById(id);
+	public Response findAuftragById(@PathParam("id") Long id) {
+		final Auftrag auftrag = as.findAuftragById(id);
+		
 		if (auftrag == null)
-			throw new NotFoundException("Kein Auftrag mit der ID " + id + " gefunden.");
+			throw new NotFoundException("auftrag.notFound.id");
 		
 		// Link-Header setzen
 		final Response response = Response.ok(auftrag)
@@ -67,7 +70,7 @@ public class AuftragResource {
 	
 	@GET
 	public Response findAuftraege() {
-		final List<Auftrag> auftraege = Mock.findAllAuftraege();
+		final List<Auftrag> auftraege = as.findAllAuftraege();
 		
 		return Response.ok(new GenericEntity<List<Auftrag>>(auftraege) { })
                        .links(getTransitionalLinksAuftraege(auftraege, uriInfo))
@@ -77,11 +80,10 @@ public class AuftragResource {
 	@GET
 	@Path("{id:[1-9][0-9]*}/rechnung")
 	public Response findRechnungenByAuftragId(@PathParam("id") Long auftragId) {
-		// TODO Anwendungskern statt Mock, Verwendung von Locale
-		final Auftrag auftrag = Mock.findAuftragById(auftragId);
-		final List<Rechnung> rechnungen = Mock.findRechnungenByAuftrag(auftrag);
+		final List<Rechnung> rechnungen = as.findRechnungenByAuftragId(auftragId);
+		
 		if (rechnungen.isEmpty()) {
-			throw new NotFoundException("Zur ID " + auftragId + " wurden keine Rechnungen gefunden.");
+			throw new NotFoundException("auftrag.notFound.rechnungen.id");
 		}
 		
 		// URIs innerhalb der gefundenen Rechnungen anpassen
@@ -97,11 +99,9 @@ public class AuftragResource {
 	@GET
 	@Path("{id:[1-9][0-9]*}/lieferant")
 	public Response findLieferantenByAuftragId(@PathParam("id") Long auftragId) {
-		// TODO Anwendungskern statt Mock, Verwendung von Locale
-		final Auftrag auftrag = Mock.findAuftragById(auftragId);
-		final List<Lieferant> lieferanten = Mock.findLieferantenByAuftrag(auftrag);
+		final List<Lieferant> lieferanten = as.findLieferantenByAuftragId(auftragId);
 		if (lieferanten.isEmpty()) {
-			throw new NotFoundException("Zur ID " + auftragId + " wurden keine Lieferanten gefunden.");
+			throw new NotFoundException("auftrag.notFound.lieferanten.id");
 		}
 		
 		// URIs innerhalb der gefundenen Lieferanten anpassen
@@ -119,9 +119,10 @@ public class AuftragResource {
 	@Produces
 	@Path("{id:[1-9][0-9]*}/lieferant")
 	public Response createLieferant(@PathParam("id") Long auftragId, Lieferant lieferant) {
-		// TODO Anwendungskern statt Mock, Verwendung von Locale
+		final Lieferant neuerLieferant = as.createLieferant(auftragId, lieferant);
+		
 		return Response.created(
-				getUriLieferant(Mock.createLieferantInAuftrag(auftragId, lieferant), this.uriInfo))
+				getUriLieferant(neuerLieferant, this.uriInfo))
 				.build();
 	}
 	
@@ -130,9 +131,10 @@ public class AuftragResource {
 	@Produces
 	@Path("{id:[1-9][0-9]*}/rechnung")
 	public Response createRechnung(@PathParam("id") Long auftragId, Rechnung rechnung) {
-		// TODO Anwendungskern statt Mock, Verwendung von Locale
+		final Rechnung neueRechnung = as.createRechnung(auftragId, rechnung);
+		
 		return Response.created(
-				getUriRechnung(Mock.createRechnungInAuftrag(auftragId, rechnung), this.uriInfo))
+				getUriRechnung(neueRechnung, this.uriInfo))
 				.build();
 	}
 
@@ -221,23 +223,22 @@ public class AuftragResource {
 	@Consumes({ APPLICATION_JSON, APPLICATION_XML, TEXT_XML })
 	@Produces
 	public Response createAuftrag(@Valid Auftrag auftrag) {
-		final URI auftragUri = getUriAuftrag(auftrag, uriInfo);
+		final Auftrag neuerAuftrag = as.createAuftrag(auftrag);
+		final URI auftragUri = getUriAuftrag(neuerAuftrag, uriInfo);
 		return Response.created(auftragUri).build();
 	}
 	
 	@PUT
 	@Consumes({APPLICATION_JSON, APPLICATION_XML, TEXT_XML })
 	@Produces
-	public void updateAuftrag(Auftrag auftrag) {
-		// TODO Anwendungskern statt Mock, Verwendung von Locale
-		Mock.updateAuftrag(auftrag);
+	public void updateAuftrag(@Valid Auftrag auftrag) {
+		as.createAuftrag(auftrag);
 	}
 	
 	@DELETE
 	@Path("{id:[1-9][0-9]*}")
 	@Produces
 	public void deleteAuftrag(@PathParam("id") Long auftragId) {
-		// TODO Anwendungskern statt Mock, Verwendung von Locale
-		Mock.deleteAuftrag(auftragId);
+		as.deleteAuftrag(auftragId);
 	}
 }

@@ -10,6 +10,7 @@ import static javax.ws.rs.core.MediaType.TEXT_XML;
 import java.net.URI;
 import java.util.List;
 
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
@@ -27,17 +28,23 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import de.shop.artikelverwaltung.domain.Produkt;
-import de.shop.util.Mock;
+import de.shop.artikelverwaltung.service.ProduktService;
 import de.shop.util.NotFoundException;
 import de.shop.util.UriHelper;
+import de.shop.util.interceptor.Log;
 
 @Path("/produkt")
-@Produces({APPLICATION_JSON, APPLICATION_XML + ";qs=0.75", TEXT_XML + ";qs=0.5"})
+@Produces({ APPLICATION_JSON, APPLICATION_XML + ";qs=0.75", TEXT_XML + ";qs=0.5" })
 @Consumes
+@Log
+@RequestScoped
 public class ProduktResource {
 	
 	public static final String PRODUKT_ID_PATH_PARAM = "id";
-	//private static final String NOT_FOUND_ID = "Produkt.notFound.id";
+	
+	@Inject
+	private ProduktService ps;
+
 	
 	@Context
 	private UriInfo uriInfo;
@@ -47,7 +54,7 @@ public class ProduktResource {
 	
 	@GET
 	public Response findProdukte() {
-		List<Produkt> produkte = Mock.findAllProdukte();
+		final List<Produkt> produkte = ps.findAllProdukte();
 
 		return Response.ok(new GenericEntity<List<Produkt>>(produkte) {
 		}).links(getTransitionalLinksProdukte(produkte, this.uriInfo))
@@ -57,8 +64,8 @@ public class ProduktResource {
 	@GET
 	@Path("{id:[1-9][0-9]*}")
 	public Response findProduktById(
-			@PathParam(PRODUKT_ID_PATH_PARAM) Long id) {
-		final Produkt produkt = Mock.findProduktById(id);
+			@PathParam(PRODUKT_ID_PATH_PARAM) Long id, @Context UriInfo uriInfo) {
+		final Produkt produkt = ps.findProduktById(id);
 		if (produkt == null)
 			throw new NotFoundException("Kein Produkt mit der ID " + id
 					+ " gefunden.");
@@ -100,7 +107,7 @@ public class ProduktResource {
 	@Consumes({ APPLICATION_JSON, APPLICATION_XML, TEXT_XML })
 	@Produces
 	public Response createProdukt(@Valid Produkt produkt) {
-		System.out.println("Neues Produkt mit id = " + produkt.getid() + " angelegt.");
+		//System.out.println("Neues Produkt mit id = " + produkt.getid() + " angelegt.");
 		final URI produktUri = getUriProdukt(produkt, uriInfo);
 		return Response.created(produktUri).build();
 	}
@@ -109,13 +116,13 @@ public class ProduktResource {
 	@Consumes({APPLICATION_JSON, APPLICATION_XML, TEXT_XML })
 	@Produces
 	public void updateProdukt(Produkt produkt) {
-		Mock.updateProdukt(produkt);
+		ps.updateProdukt(produkt);
 	}
 	
 	@DELETE
 	@Path("{id:[1-9][0-9]*}")
 	@Produces
 	public void deleteProdukt(@PathParam("id") Long produktId) {
-		Mock.deleteProdukt(produktId);
+		ps.deleteProdukt(produktId);
 	}
 }

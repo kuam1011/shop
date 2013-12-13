@@ -2,13 +2,20 @@ package de.shop.util;
 
 
 public class NotFoundException extends RuntimeException {
-	private static final long serialVersionUID = -866705588853138386L;
-
-	public NotFoundException(String msg) {
-		super(msg);
-	}
 	
-	public NotFoundException(String msg, Throwable t) {
-		super(msg, t);
+	/**
+	 * @autor: <a href="mailto:Juergen.Zimmermann@HS-Karlsruhe.de">J&uuml;rgen Zimmermann</a>
+	 */
+	
+	private static final long serialVersionUID = 8449022232751591762L;
+	private final Object[] args;
+
+	public NotFoundException(String msg, Object... args) {
+		super(msg);
+		this.args = args;
+	}
+
+	public Object[] getArgs() {
+		return args.clone();
 	}
 }

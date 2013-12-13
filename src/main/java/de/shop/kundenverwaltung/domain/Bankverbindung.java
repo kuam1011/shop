@@ -2,36 +2,54 @@ package de.shop.kundenverwaltung.domain;
 
 import java.io.Serializable;
 
+import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
 public class Bankverbindung implements Serializable {
 
+
 	private static final long serialVersionUID = 7480998754450482596L;
 	
-	//@Id
-	//@GeneratedValue
-	//@Column(name = "id", nullable = false, updatable = false)
+	private static final int KONTONUMMER_LENGTH_MIN = 5;
+	private static final int KONTONUMMER_LENGTH_MAX = 10;
+	private static final int BANKNAME_LENGTH_MIN = 2;
+	private static final int BANKNAME_LENGTH_MAX = 30;
+	
+	@Id
+	@GeneratedValue
+	@Column(name = "id", nullable = false, updatable = false)
 	@XmlAttribute
 	private Long id;
 	
-	//@Column(name = "kontonr", nullable = false)
+	@NotNull(message = "{bankverbindung.kontonummer.notNull}")
+	@Size(min = KONTONUMMER_LENGTH_MIN, max = KONTONUMMER_LENGTH_MAX, message = "{bankverbindung.kontonummer.length}")
+	@Column(name = "kontonr", nullable = false)
 	@XmlElement(required = true)
 	private String knr;
 	
-	//@Column(name = "blz", nullable = false)
+	@NotNull(message = "{bankverbindung.blz.notNull}")
+	@Pattern(regexp = "\\d{8}", message = "{bankverbindung.plz.pattern}")
+	@Column(name = "blz", nullable = false)
 	@XmlElement(required = true)
 	private String blz;
 	
-	//@Column(name = "bankname", nullable = false)
+	@NotNull(message = "{bankverbindung.bankname.notNull}")
+	@Size(min = BANKNAME_LENGTH_MIN, max = BANKNAME_LENGTH_MAX, message = "{bankverbindung.kontonummer.length}")
+	@Column(name = "bankname", nullable = false)
 	@XmlElement(required = true)
 	private String bankname;
 
 	public Bankverbindung (Long id, String knr, String blz, String bankname)
 	{
 		super();
-		setId(id);
 		setKnr(knr);
+		setId(id);
 		setBlz(blz);
 		setBankname(bankname);
 	}

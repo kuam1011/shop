@@ -10,6 +10,7 @@ import static javax.ws.rs.core.MediaType.TEXT_XML;
 import java.net.URI;
 import java.util.List;
 
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -26,17 +27,17 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import de.shop.bestellverwaltung.domain.Auftrag;
-import de.shop.bestellverwaltung.domain.Rechnung;
 import de.shop.bestellverwaltung.domain.Lieferant;
-import de.shop.util.Mock;
+import de.shop.bestellverwaltung.domain.Rechnung;
+import de.shop.bestellverwaltung.service.LieferantService;
 import de.shop.util.NotFoundException;
 import de.shop.util.UriHelper;
 
 
 @Path("/lieferant")
-@Produces({ APPLICATION_JSON, APPLICATION_XML + ";qs=0.75",
-		TEXT_XML + ";qs=0.5" })
+@Produces({ APPLICATION_JSON, APPLICATION_XML + ";qs=0.75", TEXT_XML + ";qs=0.5" })
 @Consumes
+@RequestScoped
 public class LieferantResource {
 	@Context
 	private UriInfo uriInfo;
@@ -44,10 +45,12 @@ public class LieferantResource {
 	private UriHelper uriHelper;
 	@Inject
 	private AuftragResource auftragResource;
-
+	@Inject
+	private LieferantService ls;
+	
 	@GET
 	public Response findLieferanten() {
-		final List<Lieferant> rechnungen = Mock.findAllLieferanten();
+		final List<Lieferant> rechnungen = ls.findAllLieferanten();
 
 		return Response.ok(new GenericEntity<List<Lieferant>>(rechnungen) {
 		}).links(getTransitionalLinksLieferanten(rechnungen, this.uriInfo))
@@ -57,8 +60,7 @@ public class LieferantResource {
 	@GET
 	@Path("{id:[1-9][0-9]*}")
 	public Response findLieferantById(@PathParam("id") Long id) {
-		// TODO Anwendungskern statt Mock, Verwendung von Locale
-		final Lieferant rechnung = Mock.findLieferantById(id);
+		final Lieferant rechnung = ls.findLieferantById(id);
 		if (rechnung == null)
 			throw new NotFoundException("Kein Lieferant mit der ID " + id + " gefunden.");
 
@@ -100,9 +102,9 @@ public class LieferantResource {
 	@Consumes({ APPLICATION_JSON, APPLICATION_XML, TEXT_XML })
 	@Produces
 	public Response createLieferant(Lieferant lieferant) {
-		// TODO Anwendungskern statt Mock, Verwendung von Locale
+		final Lieferant neuerLieferant = ls.createLieferant(lieferant);
 		return Response.created(
-				getUriLieferant(Mock.createLieferant(lieferant), this.uriInfo))
+				getUriLieferant(neuerLieferant, this.uriInfo))
 				.build();
 	}
 
@@ -110,16 +112,14 @@ public class LieferantResource {
 	@Consumes({ APPLICATION_JSON, APPLICATION_XML, TEXT_XML })
 	@Produces
 	public void updateLieferant(Lieferant lieferant) {
-		// TODO Anwendungskern statt Mock, Verwendung von Locale
-		Mock.updateLieferant(lieferant);
+		ls.updateLieferant(lieferant);
 	}
 
 	@DELETE
 	@Path("{id:[1-9][0-9]*}")
 	@Produces
 	public void deleteLieferant(@PathParam("id") Long liefernantId) {
-		// TODO Anwendungskern statt Mock, Verwendung von Locale
-		Mock.deleteLieferant(liefernantId);
+		ls.deleteLieferant(liefernantId);
 	}
 
 	public void setStructuralLinksLieferant(Lieferant lieferant, UriInfo uriInfo) {

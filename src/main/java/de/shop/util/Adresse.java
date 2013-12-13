@@ -9,16 +9,30 @@ import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Temporal;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import de.shop.kundenverwaltung.domain.Kunde;
+
 public class Adresse implements Serializable {
+
 	
-	
+	private static final int ORT_LENGTH_MIN = 2;
+	private static final int ORT_LENGTH_MAX = 32;
+	private static final int HAUSNUMMER_LENGTH_MIN = 1;
+	private static final int HAUSNUMMER_LENGTH_MAX = 5;
+	private static final int STRASSE_LENGTH_MIN = 2;
+	private static final int STRASSE_LENGTH_MAX = 50;
 	
 	private static final long serialVersionUID = -4635465770154913825L;
 
+	@XmlTransient
+	private Kunde kunde;
+	
 	@Id
 	@GeneratedValue
 	@Column(name = "id", nullable = false, updatable = false)
@@ -34,22 +48,31 @@ public class Adresse implements Serializable {
 	@XmlTransient
 	private Date erzeugt;
 
+	@NotNull(message = "{adresse.strasse.notNull}")
+	@Size(min = STRASSE_LENGTH_MIN, max = STRASSE_LENGTH_MAX, message = "{adresse.strasse.length}")
 	@Column(name = "strasse", nullable = false)
 	@XmlElement(required = true)
 	private String strasse;
 
+	@NotNull(message = "{adresse.hausnummer.notNull}")
+	@Size(min = HAUSNUMMER_LENGTH_MIN, max = HAUSNUMMER_LENGTH_MAX, message = "{adresse.hausnummer.length}")
 	@Column(name = "hausnummer", nullable = false)
 	@XmlElement(required = true)
 	private String hausnummer;
 
+	@NotNull(message = "{adresse.plz.notNull}")
+	@Pattern(regexp = "\\d{5}", message = "{adresse.plz}")
 	@Column(name = "plz", nullable = false)
 	@XmlElement(required = true)
 	private String plz;
 
+	@NotNull(message = "{adresse.ort.notNull}")
+	@Size(min = ORT_LENGTH_MIN, max = ORT_LENGTH_MAX, message = "{adresse.ort.length}")
 	@Column(name = "ort", nullable = false)
 	@XmlElement(required = true)
 	private String ort;
 	
+	@NotNull(message = "{adresse.land.notNull}")
 	@Column(name = "land", nullable = false)
 	@XmlElement(required = true)
 	private String land;
@@ -99,7 +122,6 @@ public class Adresse implements Serializable {
 	}
 
 	public void setOrt(String ort) {
-		//TODO Plausibilität prüfen
 		this.ort = ort;
 	}
 
@@ -108,7 +130,6 @@ public class Adresse implements Serializable {
 	}
 
 	public void setPlz(String plz) {
-		//TODO Plausibilität prüfen
 		this.plz = plz;
 	}
 
@@ -117,40 +138,17 @@ public class Adresse implements Serializable {
 	}
 
 	public void setStrasse(String strasse) {
-		//TODO Plausibilität prüfen
 		this.strasse = strasse;
 	}
 	
-	/**
-	 * 
-	 */
-	public Adresse() {
-		super();
+	public Kunde getKunde() {
+		return kunde;
 	}
 
-	/**
-	 * @param id
-	 * @param aktualisiert
-	 * @param erzeugt
-	 * @param strasse
-	 * @param hausnummer
-	 * @param plz
-	 * @param ort
-	 * @param land
-	 */
-	public Adresse(Long id, Date aktualisiert, Date erzeugt, String strasse,
-			String hausnummer, String plz, String ort, String land) {
-		super();
-		setId(id);
-		setAktualisiert(aktualisiert);
-		setErzeugt(erzeugt);
-		setStrasse(strasse);
-		setHausnummer(hausnummer);
-		setPlz(plz);
-		setOrt(ort);
-		setLand(land);
+	public void setKunde(Kunde kunde) {
+		this.kunde = kunde;
 	}
-
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -176,46 +174,54 @@ public class Adresse implements Serializable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Adresse other = (Adresse) obj;
+		final Adresse other = (Adresse) obj;
 		if (aktualisiert == null) {
 			if (other.aktualisiert != null)
 				return false;
-		} else if (!aktualisiert.equals(other.aktualisiert))
+		}
+		else if (!aktualisiert.equals(other.aktualisiert))
 			return false;
 		if (erzeugt == null) {
 			if (other.erzeugt != null)
 				return false;
-		} else if (!erzeugt.equals(other.erzeugt))
+		}
+		else if (!erzeugt.equals(other.erzeugt))
 			return false;
 		if (hausnummer == null) {
 			if (other.hausnummer != null)
 				return false;
-		} else if (!hausnummer.equals(other.hausnummer))
+		}
+		else if (!hausnummer.equals(other.hausnummer))
 			return false;
 		if (id == null) {
 			if (other.id != null)
 				return false;
-		} else if (!id.equals(other.id))
+		}
+		else if (!id.equals(other.id))
 			return false;
 		if (land == null) {
 			if (other.land != null)
 				return false;
-		} else if (!land.equals(other.land))
+		}
+		else if (!land.equals(other.land))
 			return false;
 		if (ort == null) {
 			if (other.ort != null)
 				return false;
-		} else if (!ort.equals(other.ort))
+		}
+		else if (!ort.equals(other.ort))
 			return false;
 		if (plz == null) {
 			if (other.plz != null)
 				return false;
-		} else if (!plz.equals(other.plz))
+		}
+		else if (!plz.equals(other.plz))
 			return false;
 		if (strasse == null) {
 			if (other.strasse != null)
 				return false;
-		} else if (!strasse.equals(other.strasse))
+		}
+		else if (!strasse.equals(other.strasse))
 			return false;
 		return true;
 	}

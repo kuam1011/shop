@@ -4,7 +4,8 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 public class Fahrrad extends Produkt {
-
+	
+	
 	enum Farbe {
 		weiss, schwarz, grau, rot, blau, gelb, gruen, bunt,
 	}
@@ -26,7 +27,7 @@ public class Fahrrad extends Produkt {
 	private String zollgroesse;
 
 	@Size(min = 2, max = 3)
-	@Pattern(regexp = "[0-9]")
+	@Pattern(regexp = "[0-9]{3,5}")
 	private String rahmenhoehe;
 
 	public String getGaenge() {

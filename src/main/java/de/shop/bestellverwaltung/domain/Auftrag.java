@@ -8,6 +8,12 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -18,7 +24,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 @XmlRootElement
 @Path("auftrag")
-@Produces({APPLICATION_JSON, APPLICATION_XML + ";qs=0.75", TEXT_XML + ";qs=0.75"})
+@Produces({APPLICATION_JSON, APPLICATION_XML + ";qs=0.75", TEXT_XML + ";qs=0.75" })
 @Consumes
 public class Auftrag implements Serializable {
 	/**
@@ -31,13 +37,27 @@ public class Auftrag implements Serializable {
 		Abgeschlossen
 	}
 	
+	@Id
+	@GeneratedValue
+	@Column(name = "id", nullable = false, updatable = false)
 	private Long id;
+	
+	@NotNull(message = "{auftrag.status.notNull}")
 	private AuftragsStatus status;
+	
 	private URI rechnungenUri;
+	
 	@XmlTransient
-	final private List<Lieferant> lieferant;
+	@NotNull(message = "{auftrag.lieferanten.notNull}")
+	@Valid
+	@Size(min = 1)
+	private final List<Lieferant> lieferanten;
+	
 	@XmlTransient
-	final private List<Rechnung> rechnung;
+	@NotNull(message = "{auftrag.rechnungen.notNull}")
+	@Valid
+	@Size(min = 1)
+	private final List<Rechnung> rechnungen;
 	
 	/**
 	 * @param nr Auftragsnummer.
@@ -45,8 +65,8 @@ public class Auftrag implements Serializable {
 	public Auftrag() {
 		super();
 		this.status = AuftragsStatus.InBearbeitung;
-		this.lieferant = new ArrayList<Lieferant>();
-		this.rechnung = new ArrayList<Rechnung>();
+		this.lieferanten = new ArrayList<Lieferant>();
+		this.rechnungen = new ArrayList<Rechnung>();
 	}
 	
 	/**
@@ -88,10 +108,10 @@ public class Auftrag implements Serializable {
 	 * @throws LieferantException
 	 */
 	public void addLieferant(Lieferant lieferant) throws LieferantException {
-		if (this.lieferant.contains(lieferant))
+		if (this.lieferanten.contains(lieferant))
 			throw new LieferantException("Lieferant bereits vorhanden.");
 		
-		this.lieferant.add(lieferant);
+		this.lieferanten.add(lieferant);
 	}
 	
 	/**
@@ -99,10 +119,10 @@ public class Auftrag implements Serializable {
 	 * @throws LieferantException
 	 */
 	public void delLieferant(Lieferant lieferant) throws LieferantException {
-		if (!this.lieferant.contains(lieferant))
+		if (!this.lieferanten.contains(lieferant))
 			throw new LieferantException("Gesuchter Lieferant nicht vorhanden.");
 		
-		this.lieferant.remove(lieferant);
+		this.lieferanten.remove(lieferant);
 	}
 	
 	/**
@@ -110,10 +130,8 @@ public class Auftrag implements Serializable {
 	 * @return Lieferant.
 	 * @throws LieferantException
 	 */
-	
-	//TODO Referenzen werden verglichen, sollen aber Werte verglichen werden
 	public Lieferant getLieferant(Long id) throws LieferantException {		
-		for (Lieferant lieferant : this.lieferant) {
+		for (Lieferant lieferant : this.lieferanten) {
 			if (lieferant.getId().equals(id))
 				return lieferant;
 		}
@@ -125,7 +143,7 @@ public class Auftrag implements Serializable {
 	 * @return Lieferantenliste.
 	 */
 	public List<Lieferant> getLieferantAll() {
-		return this.lieferant;
+		return this.lieferanten;
 	}
 	
 	/**
@@ -133,10 +151,10 @@ public class Auftrag implements Serializable {
 	 * @throws RechnungException
 	 */
 	public void addRechnung(Rechnung rechnung) throws RechnungException {
-		if (this.rechnung.contains(rechnung))
+		if (this.rechnungen.contains(rechnung))
 			throw new RechnungException("Rechnung bereits vorhanden.");
 		
-		this.rechnung.add(rechnung);
+		this.rechnungen.add(rechnung);
 	}
 	
 	/**
@@ -144,10 +162,10 @@ public class Auftrag implements Serializable {
 	 * @throws RechnungException
 	 */
 	public void delRechnung(Rechnung rechnung) throws RechnungException {
-		if (!this.rechnung.contains(rechnung))
+		if (!this.rechnungen.contains(rechnung))
 			throw new RechnungException("Gesuchte Rechnung nicht vorhanden.");
 		
-		this.rechnung.remove(rechnung);
+		this.rechnungen.remove(rechnung);
 	}
 	
 	/**
@@ -156,12 +174,10 @@ public class Auftrag implements Serializable {
 	 * @throws RechnungException
 	 */
 	public Rechnung getRechnung(Long id) throws RechnungException {
-		if (this.rechnung == null)
+		if (this.rechnungen == null)
 			throw new RechnungException("Gesuchte Rechnung nicht vorhanden.");
 		
-		
-		//TODO Referenzen werden verglichen, sollen aber Werte verglichen werden
-		for (Rechnung rechnung : this.rechnung) {
+		for (Rechnung rechnung : this.rechnungen) {
 			if (rechnung.getId().equals(id))
 				return rechnung;
 		}
@@ -173,7 +189,7 @@ public class Auftrag implements Serializable {
 	 * @return Rechnungsliste.
 	 */
 	public List<Rechnung> getRechnungAll() {
-		return this.rechnung;
+		return this.rechnungen;
 	}
 	
 	public URI getRechnungenUri() {
@@ -183,16 +199,18 @@ public class Auftrag implements Serializable {
 	public void setRechnungenUri(URI rechnungenUri) {
 		this.rechnungenUri = rechnungenUri;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		result = prime * result
-				+ ((lieferant == null) ? 0 : lieferant.hashCode());
+				+ ((lieferanten == null) ? 0 : lieferanten.hashCode());
 		result = prime * result
-				+ ((rechnung == null) ? 0 : rechnung.hashCode());
+				+ ((rechnungen == null) ? 0 : rechnungen.hashCode());
+		result = prime * result
+				+ ((rechnungenUri == null) ? 0 : rechnungenUri.hashCode());
 		result = prime * result + ((status == null) ? 0 : status.hashCode());
 		return result;
 	}
@@ -209,37 +227,36 @@ public class Auftrag implements Serializable {
 		if (id == null) {
 			if (other.id != null)
 				return false;
-		} else if (!id.equals(other.id))
+		}
+		else if (!id.equals(other.id))
 			return false;
-		if (lieferant == null) {
-			if (other.lieferant != null)
+		if (lieferanten == null) {
+			if (other.lieferanten != null)
 				return false;
-		} else if (!lieferant.equals(other.lieferant))
+		}
+		else if (!lieferanten.equals(other.lieferanten))
 			return false;
-		if (rechnung == null) {
-			if (other.rechnung != null)
+		if (rechnungen == null) {
+			if (other.rechnungen != null)
 				return false;
-		} else if (!rechnung.equals(other.rechnung))
+		}
+		else if (!rechnungen.equals(other.rechnungen))
+			return false;
+		if (rechnungenUri == null) {
+			if (other.rechnungenUri != null)
+				return false;
+		}
+		else if (!rechnungenUri.equals(other.rechnungenUri))
 			return false;
 		if (status != other.status)
 			return false;
 		return true;
 	}
-	
+
 	@Override
 	public String toString() {
-		return "Auftrag [getId()=" + getId() + ", getStatus()=" + getStatus()
-				+ ", getLieferantAll()=" + getLieferantAll()
-				+ ", getRechnungAll()=" + getRechnungAll() + "]";
+		return "Auftrag [id=" + id + ", status=" + status + ", rechnungenUri="
+				+ rechnungenUri + ", lieferanten=" + lieferanten
+				+ ", rechnungen=" + rechnungen + "]";
 	}
-
-	/*
-	@POST
-	public Response createAuftrag(Auftrag auftrag) {
-		//einen neuen Auftrag anlegen
-		URI myuri = URI.create("http://.../auftrag/" + getId());
-		return Response.created(myuri)
-					   .build();
-	}
-	*/
 }

@@ -3,11 +3,16 @@ package de.shop.bestellverwaltung.domain;
 import java.io.Serializable;
 import java.net.URI;
 
+import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.validation.Valid;
+import javax.validation.constraints.Future;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import de.shop.util.Adresse;
-
 
 
 @XmlRootElement
@@ -16,11 +21,27 @@ public class Lieferant implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = -5999639397965054734L;
+
+	@Id
+	@GeneratedValue
+	@Column(name = "id", nullable = false, updatable = false)
 	private Long id;
+	
+	@NotNull(message = "{lieferant.name.notNull}")
+	@Pattern(regexp = "[A-ZÄÖÜ][a-zäöü]+", message = "{lieferant.name.pattern}")
 	private String name;
+	
+	@NotNull(message = "{lieferant.lieferzeit.notNull}")
+	@Future
 	private Integer lieferzeit;
+	
 	private URI auftragUri;
+	
+	@NotNull(message = "{lieferant.auftrag.notNull}")
+	@Valid
 	private Auftrag auftrag;
+	
+	@NotNull(message = "{lieferant.adresse.notNull")
 	@Valid
 	private Adresse adresse;
 
@@ -79,7 +100,7 @@ public class Lieferant implements Serializable {
 	 * @param name Lieferantenname.
 	 */
 	public void setName(String name) {
-		if (name == null || name.equals(""))
+		if (name == null || "".equals(name))
 			throw new NullPointerException("Lieferantenname darf nicht leer sein.");
 		
 		this.name = name;
@@ -127,27 +148,32 @@ public class Lieferant implements Serializable {
 		if (auftrag == null) {
 			if (other.auftrag != null)
 				return false;
-		} else if (!auftrag.equals(other.auftrag))
+		}
+		else if (!auftrag.equals(other.auftrag))
 			return false;
 		if (auftragUri == null) {
 			if (other.auftragUri != null)
 				return false;
-		} else if (!auftragUri.equals(other.auftragUri))
+		}
+		else if (!auftragUri.equals(other.auftragUri))
 			return false;
 		if (id == null) {
 			if (other.id != null)
 				return false;
-		} else if (!id.equals(other.id))
+		}
+		else if (!id.equals(other.id))
 			return false;
 		if (lieferzeit == null) {
 			if (other.lieferzeit != null)
 				return false;
-		} else if (!lieferzeit.equals(other.lieferzeit))
+		}
+		else if (!lieferzeit.equals(other.lieferzeit))
 			return false;
 		if (name == null) {
 			if (other.name != null)
 				return false;
-		} else if (!name.equals(other.name))
+		}
+		else if (!name.equals(other.name))
 			return false;
 		return true;
 	}

@@ -10,6 +10,7 @@ import static javax.ws.rs.core.MediaType.TEXT_XML;
 import java.net.URI;
 import java.util.List;
 
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -28,14 +29,15 @@ import javax.ws.rs.core.UriInfo;
 import de.shop.bestellverwaltung.domain.Auftrag;
 import de.shop.bestellverwaltung.domain.Lieferant;
 import de.shop.bestellverwaltung.domain.Rechnung;
-import de.shop.util.Mock;
+import de.shop.bestellverwaltung.service.RechnungService;
 import de.shop.util.NotFoundException;
 import de.shop.util.UriHelper;
 
+
 @Path("/rechnung")
-@Produces({ APPLICATION_JSON, APPLICATION_XML + ";qs=0.75",
-		TEXT_XML + ";qs=0.5" })
+@Produces({ APPLICATION_JSON, APPLICATION_XML + ";qs=0.75", TEXT_XML + ";qs=0.5" })
 @Consumes
+@RequestScoped
 public class RechnungResource {
 	@Context
 	private UriInfo uriInfo;
@@ -43,11 +45,12 @@ public class RechnungResource {
 	private UriHelper uriHelper;
 	@Inject
 	private AuftragResource auftragResource;
-
+	@Inject
+	private RechnungService rs;
+	
 	@GET
 	public Response findRechnungen() {
-		final List<Rechnung> rechnungen = Mock.findAllRechnungen();
-
+		final List<Rechnung> rechnungen = rs.findAllRechnungen();
 		return Response.ok(new GenericEntity<List<Rechnung>>(rechnungen) {
 		}).links(getTransitionalLinksRechnungen(rechnungen, this.uriInfo))
 				.build();
@@ -56,8 +59,7 @@ public class RechnungResource {
 	@GET
 	@Path("{id:[1-9][0-9]*}")
 	public Response findRechnungById(@PathParam("id") Long id) {
-		// TODO Anwendungskern statt Mock, Verwendung von Locale
-		final Rechnung rechnung = Mock.findRechnungById(id);
+		final Rechnung rechnung = rs.findRechnungById(id);
 		if (rechnung == null)
 			throw new NotFoundException("Kein Rechnung mit der ID " + id + " gefunden.");
 
@@ -99,9 +101,9 @@ public class RechnungResource {
 	@Consumes({ APPLICATION_JSON, APPLICATION_XML, TEXT_XML })
 	@Produces
 	public Response createRechnung(Rechnung rechnung) {
-		// TODO Anwendungskern statt Mock, Verwendung von Locale
+		final Rechnung neueRechnung = rs.createRechnung(rechnung);
 		return Response.created(
-				getUriRechnung(Mock.createRechnung(rechnung), this.uriInfo))
+				getUriRechnung(neueRechnung, this.uriInfo))
 				.build();
 	}
 
@@ -109,16 +111,14 @@ public class RechnungResource {
 	@Consumes({ APPLICATION_JSON, APPLICATION_XML, TEXT_XML })
 	@Produces
 	public void updateRechnung(Rechnung rechnung) {
-		// TODO Anwendungskern statt Mock, Verwendung von Locale
-		Mock.updateRechnung(rechnung);
+		rs.updateRechnung(rechnung);
 	}
 
 	@DELETE
 	@Path("{id:[1-9][0-9]*}")
 	@Produces
 	public void deleteRechnung(@PathParam("id") Long liefernantId) {
-		// TODO Anwendungskern statt Mock, Verwendung von Locale
-		Mock.deleteRechnung(liefernantId);
+		rs.deleteRechnung(liefernantId);
 	}
 
 	public void setStructuralLinksRechnung(Rechnung rechnung, UriInfo uriInfo) {

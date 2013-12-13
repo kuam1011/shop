@@ -4,8 +4,13 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.net.URI;
 
+import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.validation.Valid;
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
-
 
 
 @XmlRootElement
@@ -14,10 +19,22 @@ public class Rechnung implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1100850404374054249L;
+
+	@Id
+	@GeneratedValue
+	@Column(name = "id", nullable = false, updatable = false)
 	private Long id;
+	
 	private Boolean istBezahlt;
+	
+	@NotNull(message = "{rechnung.summe.notNull}")
+	@DecimalMin("0.0")
 	private BigDecimal summe;
+	
 	private URI auftragUri;
+	
+	@NotNull(message = "{rechnung.auftrag.notNull}")
+	@Valid
 	private Auftrag auftrag;
 
 	public Long getId() {
@@ -104,17 +121,20 @@ public class Rechnung implements Serializable {
 		if (id == null) {
 			if (other.id != null)
 				return false;
-		} else if (!id.equals(other.id))
+		}
+		else if (!id.equals(other.id))
 			return false;
 		if (istBezahlt == null) {
 			if (other.istBezahlt != null)
 				return false;
-		} else if (!istBezahlt.equals(other.istBezahlt))
+		}
+		else if (!istBezahlt.equals(other.istBezahlt))
 			return false;
 		if (summe == null) {
 			if (other.summe != null)
 				return false;
-		} else if (!summe.equals(other.summe))
+		}
+		else if (!summe.equals(other.summe))
 			return false;
 		return true;
 	}
